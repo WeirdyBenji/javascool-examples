@@ -1,3 +1,12 @@
+/*
+Projet Initié par : Fanny A., Julie DL. et Raphaël G.
+Dans le cadre des projets de spécialité ISN 2016-2017
+Auteur : Benjamin Feller
+Soft : javascool-proglets -> codagePixels
+Requière : Fond.jpg et Game_over.jpg
+Version finale, non optimisée, commentée pour une compréhension de niveau apprentissage du language Java
+*/
+
 //Initialisation de toutes les variables globales (communes à toutes les fonctions et à la runnable)
 int fond[][][];
 int pommeX = 0;
@@ -177,7 +186,7 @@ void finjeu() {
 	//Nous arrêtons la runnable pour que l'utilisateur ne puisse plus déplacer le panier
 	setRunnable(null);
 	//Nous affichons l'écran de fin
-	load("gameOver.jpg");
+	load("Game_over.jpg");
 	//Et nous écrivons le nombre de pommes accumulés dans la console
 	print("Vous avez récupéré " + score + " pommes. Allons faire des tartes !");
 }
