@@ -1,0 +1,183 @@
+//Initialisation de toutes les variables globales (communes à toutes les fonctions et à la runnable)
+int fond[][][];
+int pommeX = 0;
+int pommeY = 0;
+int largeur = 0;
+int hauteur = 0;
+int panierX = 0;
+int panierY = 0;
+int score = 0;
+	
+void main() {
+  clear();
+  //Chargement de l'image de fond avec redéfinition de l'origine
+	load("fond.jpg", false);
+  print("Attrapez les pommes avec votre panier, si vous laissez tomber une, vous aurez perdu !");
+	//Nous mettons à jour les variables liées au fond
+	largeur = getWidth();
+	hauteur = getHeight();
+	fond = new int[largeur][hauteur][3];
+	//Enregistrement de l'image de fond RGB
+	enregFond();
+
+	//Initialisation de la position du panier
+	panierX = largeur/2; //Il sera au milieu en x
+	panierY = hauteur-17; //Et il sera juste au dessus des flèches en y
+	panier(panierX, panierY);
+	//Intialisation de la position de la première pomme
+	pommeX = random(0, largeur);
+	
+	//Nous lançons la runnable qui va récupérer les clicks sur les flèches dessinées
+	//Et ainsi déplacer le curseur qui est le panier
+	curseur();
+
+	//Demande à l'utilisateur du niveau de difficulté qui est en réalité un réglage de vitesse
+	int niveau = readInt("Ajustez le niveau de difficulté (De 1 à 10):");
+	
+	//Nous créons la boucle qui va se répéter jusqu'à la défaite
+	boolean stop = false;
+	while(!stop){
+		//La fonction gère la pomme et dira à la boucle de s'arrêter ou pas
+		stop = gestionPomme();
+		//Pause entre chaque image liée au niveau de difficulté (le panier n'y est pas soumis)
+		sleep(500/niveau);
+	}
+
+	//Nous spécifions que le jeu est terminé
+	finjeu();
+}
+
+void enregFond() {
+	//Le tableau est parcouru de largeur
+	for (int x = 0; x < largeur; x ++) {
+		//en hauteur
+		for (int y = 0; y < hauteur; y ++) {
+			//Création d'une liste qui va enregistrer les teintes RVB de chaque pixel
+			int []rgb = getPixelColor(x, y);
+			//Puis enregistrer chaque teinte dans la case du tableau associée à ce pixel
+			fond[x][y][0] = rgb[0];
+			fond[x][y][1] = rgb[1];
+			fond[x][y][2] = rgb[2];
+		}
+	}
+}
+
+void affichFond() {
+	//Rappel : largeur = fond.length
+	for (int x = 0; x < largeur; x ++) {
+		//Rappel : hauteur = fond[x].length
+		for (int y = 0; y < hauteur; y ++) {
+			setPixel(x, y, fond[x][y][0], fond[x][y][1], fond[x][y][2]);
+		}
+	}
+}
+
+void curseur() {
+	//Démarrage de la runnable
+	setRunnable(new Runnable() {
+		public void run() {
+			//Récupération de la position du click de l'utilisateur
+			if (getX() < largeur/2 && panierX > 0) {
+				//Si l'utilisateur à cliqué sur la partie gauche de la proglet 
+				//et le panier et toujours dans le champ visible de la proglet
+				//Alors il se déplace de 5 pixels sur la gauche (5px est la taille du panier)
+				panierX -= 5;}
+			if (getX() >= largeur/2 && panierX < largeur) {
+				//Si l'utilisateur à cliqué sur la partie droite de la proglet 
+				//et le panier et toujours dans le champ visible de la proglet
+				//Alors il se déplace de 5 pixels sur la droite
+				panierX += 5;}
+
+			//Rajout d'une petite blague discrète
+			if (getY() > hauteur & panierY < hauteur-17) {
+				panierY += 5;
+				//On corrige la trajectoire
+				if (getX() < largeur/2 && panierX > 0) {
+					panierX += 5;}
+				if (getX() >= largeur/2 && panierX < largeur) {
+					panierX -= 5;}
+			}
+			if (getY() < 0 & panierY > 0+5) {
+				panierY -= 5;
+
+				if (getX() < largeur/2 && panierX > 0) {
+					panierX += 5;}
+				if (getX() >= largeur/2 && panierX < largeur) {
+					panierX -= 5;}
+			}
+				
+			//Nous réaffichons le fond avant pour effacer l'ancienne position du panier
+			affichFond();
+			panier(panierX, panierY);
+			//Nous réaffichons la position de la pomme pour ne pas qu'elle disparaisse lorsque
+			//l'utilisateur clique sur une flèche (effet de clignottement)
+			setPixel(pommeX, pommeY, "red");
+	}});
+}
+
+void panier(int xPanier, int yPanier) {
+	//Forme du panier
+	setPixel(xPanier-3, yPanier-3, "orange");
+	setPixel(xPanier-3, yPanier-2, "orange");
+	setPixel(xPanier-3, yPanier-1, "orange");
+	setPixel(xPanier-2, yPanier-1, "orange");
+	setPixel(xPanier-2, yPanier, "orange");
+	setPixel(xPanier-1, yPanier-1, "red");
+	setPixel(xPanier-1, yPanier, "orange");
+	setPixel(xPanier, yPanier, "orange");
+	setPixel(xPanier+1, yPanier, "orange");
+	setPixel(xPanier+2, yPanier, "orange");
+	setPixel(xPanier+2, yPanier-1, "orange");
+	setPixel(xPanier+3, yPanier-1, "orange");
+	setPixel(xPanier+3, yPanier-2, "orange");
+	setPixel(xPanier+3, yPanier-3, "orange");
+}
+
+//On va au plus simple en créant une fonction qui modifiera l'état de la variable stop
+boolean gestionPomme() {
+	//Effaçage de l'ancienne position de la pomme
+	setPixel(pommeX, pommeY, fond[pommeX][pommeY][0], fond[pommeX][pommeY][1], fond[pommeX][pommeY][2]);
+	//La pomme tombe d'un pixel
+	pommeY++;
+	//Affichage de la nouvelle position de la pomme
+	setPixel(pommeX, pommeY, "red");
+
+	//Si la pomme est sous le panier ou au niveau du fond du panier
+	if(pommeY >= hauteur-15){
+		//Réaffichage de la pomme qui a causé la défaite pour qu'elle reste affichée
+		setPixel(pommeX, pommeY, "red");
+
+		//Nous supprimons l'ancienne pomme et nous en créons une nouvelle pour ne pas à avoir à re-compiler
+		pommeY = 0;
+		pommeX = random(0, largeur);
+
+		//C'est l'arret de la boucle while, la fin du programme puis la défaite
+		return true;
+	}
+
+	//Les bords du panier seront considérés amovibles
+	//La pomme doit être au dessus du sol
+	if(pommeY <= hauteur-15 && 
+		//Dans la zone du panier en hauteur
+		(pommeY > panierY-3 && pommeY <= panierY) &&
+		//Dans la zone du panier en largeur
+		(pommeX >= panierX-3 && pommeX <= panierX+3)){
+		//Le score augmente de 1
+		score++;
+		//Nous supprimons l'ancienne pomme et nous en créons une nouvelle
+		pommeY = 0;
+		pommeX = random(0, largeur);
+	}
+	
+	//S'il n'y a rien à signaler, la boucle ne s'arrête pas
+	return false;
+}
+
+void finjeu() {
+	//Nous arrêtons la runnable pour que l'utilisateur ne puisse plus déplacer le panier
+	setRunnable(null);
+	//Nous affichons l'écran de fin
+	load("gameOver.jpg");
+	//Et nous écrivons le nombre de pommes accumulés dans la console
+	print("Vous avez récupéré " + score + " pommes. Allons faire des tartes !");
+}
