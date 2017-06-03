@@ -1,0 +1,250 @@
+/*
+Projet Initié par : Dylan M. et Robin B.
+Dans le cadre des projets de spécialité ISN 2016-2017
+Auteur : Benjamin Feller
+Soft : javascool-proglets -> codagePixels
+Requière : fond.png
+Version finale, non optimisée, commentée pour une compréhension de niveau apprentissage du language Java
+*/
+ 
+//Déclaration des variables globales
+int tab[][][];
+int bomb[][];
+int clickX = 0;
+int clickY = 0;
+boolean boucle = true;
+int toDiscov = 0;
+boolean fin;
+
+void main(){
+	clear();
+	//Chargement de l'image avec redéfinition de l'origine
+	load("fond.png", false);
+	//Création du tableau qui va contenir les cases visibles
+	tab = new int[getWidth()][getHeight()][3];
+	//Création du tableau qui va contenir les bombes
+	bomb = new int[getWidth()][getHeight()];
+	//Calcul du nombre de cases non piégées
+	toDiscov = getWidth()*getHeight();
+
+	//On enregistre l'image qui va devenir le plateau de jeu
+	dammier();
+	//On l'affiche une première fois
+	affichage();
+	//On remplis le tableau des bombes
+	randFill();
+	//On lance la runnable pour détecter les clicks
+	getClick();
+	//solveur();//<= Aide à la résolution pour tester le programme
+	
+	while(boucle){
+		affichage();
+		//boom();//<= Aide à la résolution sans découvrir toutes les cases
+		//Si toutes les cases on été découvertes, c'est la victoire
+		if (toDiscov == 0){
+			boucle = false;
+			fin = true;
+		}
+	}
+
+	fin();
+}
+
+void dammier() {
+	for(int x = 0; x < tab.length; x++){
+		for(int y = 0; y < tab[x].length; y++){
+			if (getPixel(x, y) == 0){
+				tab[x][y][0] = 0+x;
+				tab[x][y][1] = 0+x;
+				tab[x][y][2] = 0+x;
+			}else{
+				tab[x][y][0] = 20+x;
+				tab[x][y][1] = 20+x;
+				tab[x][y][2] = 20+x;
+			}
+		}
+	}
+}
+
+void affichage(){
+	for(int x = 0; x < tab.length; x++){
+		for(int y = 0; y < tab[x].length; y++){
+				setPixel(x, y, tab[x][y][0], tab[x][y][1], tab[x][y][2]);
+		}
+	}
+}
+
+void randFill(){
+	for(int x = 0; x < tab.length; x++){
+		for(int y = 0; y < tab[x].length; y++){
+			int rand = 0;
+			//On prend un nombre au hasard entre 0 et 9 => 10% de chance d'avoir n'importe quel chiffre
+			rand = random(0, 9);
+			//Si on tombe sur 2 alors il y aura une bombe à cet emplacement
+			if (rand == 2){
+				bomb[x][y] = 1;
+				//Après avoir placé la bombe on enlève une case clickable au décompte
+				toDiscov--;
+			}
+			//print(bomb[x][y]);
+		}
+		//println();
+	}
+}
+
+void getClick() {
+	setRunnable(new Runnable() {
+		public void run() {
+			clickX = getX();
+			clickY = getY();
+			//Si la case clické est une bombe
+			if (bomb[clickX][clickY] == 1){
+				//On arrête la runnable
+				setRunnable(null);
+				//On arrête la boucle while de l'affichage
+				boucle = false;
+				//On dit à la procédure fin() qu'on a perdu
+				fin = false;
+
+			//Si la case clickée n'est pas une bombe
+			}else{
+				//Et qu'elle n'est pas déjà découverte (déjà blanche ou rosée)
+				if (tab[clickX][clickY][0] < 255){
+					//On compte le nombre de bombes autour de la cellule pour donner un indice
+					//et on associe une couleur à la case
+					tab[clickX][clickY][0] = 255;
+					tab[clickX][clickY][1] = 255-isThereABomb(clickX, clickY)*20;
+					tab[clickX][clickY][2] = 255-isThereABomb(clickX, clickY)*20;
+					//Et on l'enlève du décompte
+					toDiscov--;
+				}
+			}
+	}});
+}
+
+void fin() {
+	//Définition des variables du milieu de l'image
+	int midL = getWidth()/2;
+	int midH = getHeight()/2;
+
+	//Si on a perdu
+	if (fin == false){
+		//On réaffiche la bombe qu'on a fait exploser
+		setPixel(clickX, clickY, "red");
+		print("Vous avez perdu ! Nombres de cases restantes à découvrir : " + toDiscov);
+		//On affiche toutes les autres
+		boom();
+			//On affiche un smiley pour marquer la défaite
+			setPixel(midL-1, midH-1, "black");
+			setPixel(midL+1, midH-1, "black");
+			setPixel(midL-1, midH-2, "black");
+			setPixel(midL+1, midH-2, "black");
+			setPixel(midL-1, midH-3, "black");
+			setPixel(midL+1, midH-3, "black");
+			setPixel(midL-2, midH+2, "black");
+			setPixel(midL-1, midH+1, "black");
+			setPixel(midL, midH+1, "black");	
+			setPixel(midL+1, midH+1, "black");
+			setPixel(midL+2, midH+2, "black");
+
+	//Si on gagné
+	}else{
+		print("Vous avez gagné !");
+		//On affiche toutes les bombes
+		boom();
+			//On affiche un smiley signifiant la victoire
+			setPixel(midL-1, midH-1, "green");
+			setPixel(midL+1, midH-1, "green");
+			setPixel(midL-1, midH-2, "green");
+			setPixel(midL+1, midH-2, "green");
+			setPixel(midL-1, midH-3, "green");
+			setPixel(midL+1, midH-3, "green");
+			setPixel(midL-2, midH+1, "green");
+			setPixel(midL-1, midH+2, "green");
+			setPixel(midL, midH+2, "green");	
+			setPixel(midL+1, midH+2, "green");
+			setPixel(midL+2, midH+1, "green");	
+	}
+	println("\nN'oubliez pas de re-compiler le programme entre deux parties.");
+}
+
+void boom() {
+	for(int x = 0; x < tab.length; x++){
+		for(int y = 0; y < tab[x].length; y++){
+			if(bomb[x][y] == 1){
+				setPixel(x, y, "red");
+			}
+		}
+	}	
+}
+
+int isThereABomb(int x, int y){
+	int count = 0;
+	//Valeur de la largeur maximal ateignable
+	int L = getWidth()-1;
+	//Valeur de la hauteur maximal et non pas la taille de l'image
+	int H = getHeight()-1;
+
+	//On doit vérifier chaque bords du tableau
+	//En haut à droite
+	if (x == 0 & y == 0){
+		count = bomb[x+1][y] +  bomb[x][y+1] + bomb[x+1][y+1];
+	//En haut à droite
+	}else if(x == L & y == 0){
+		count = bomb[x-1][y] + bomb[x-1][y+1] + bomb[x][y+1];
+	//En bas à droite
+	}else if(x == L & y == H){
+		count = bomb[x-1][y-1] + bomb[x][y-1] + bomb[x-1][y];
+	//En bas à gauche
+	}else if(x == 0 & y == H){
+		count = bomb[x][y-1] + bomb[x+1][y-1] + bomb[x+1][y];
+
+	//Bord haut
+	}else if(x > 0 & x < L & y == 0){
+		count =	bomb[x-1][y]   + 			  bomb[x+1][y] + 
+				bomb[x-1][y+1] + bomb[x][y+1] + bomb[x+1][y+1];
+	//Bord gauche
+	}else if(x == 0 & y > 0 & y < H){
+		count =	bomb[x][y-1] + bomb[x+1][y-1] + 
+							bomb[x+1][y] + 
+				bomb[x][y+1] + bomb[x+1][y+1];
+	//Bord bas
+	}else if(x > 0 & x < L & y == H){
+		count =	bomb[x-1][y-1] + bomb[x][y-1] + bomb[x+1][y-1] + 
+				bomb[x-1][y]   + 			  bomb[x+1][y];
+	//Bord droit
+	}else if(x == L & y > 0 & y < H){
+		count =	bomb[x-1][y-1] + bomb[x][y-1] +
+				bomb[x-1][y]   +  
+				bomb[x-1][y+1] + bomb[x][y+1];
+
+	//Au milieu
+	}else{
+		count =	bomb[x-1][y-1] + bomb[x][y-1] + bomb[x+1][y-1] + 
+				bomb[x-1][y]   + 			  bomb[x+1][y] + 
+				bomb[x-1][y+1] + bomb[x][y+1] + bomb[x+1][y+1];
+	}
+	return count;
+}
+
+void solveur(){
+	//On affiche toutes les bombes à la place du damier
+	boom();
+	//On enlève la bombe en bas à droite pour peu qu'il y en ai une
+	bomb[bomb.length-1][bomb[bomb.length-1].length-1] = 0;
+	//On va découvrir toutes les cases sauf une donc on les enlève du décompte
+	toDiscov = 1;
+	for(int x = 0; x < tab.length; x++){
+		for(int y = 0; y < tab[x].length; y++){
+			//On découvre toutes les cases en les mettant blanches
+			tab[x][y][0] = 255;
+			tab[x][y][1] = 255;
+			tab[x][y][2] = 255;
+		}
+	}
+	print("Clickez sur la case noir pour terminer la partie.");
+	//On dessine la dernière case, sans bombe, en bas à droite, pour gagner en noir
+	tab[tab.length-1][tab[tab.length-1].length-1][0] = 0;
+	tab[tab.length-1][tab[tab.length-1].length-1][1] = 0;
+	tab[tab.length-1][tab[tab.length-1].length-1][2] = 0;
+}
